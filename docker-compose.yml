@@ -1,0 +1,70 @@
+# Base compose file: defines all services + mongo on a shared internal network.
+# Shared by dev and prod; combine with docker-compose.dev.yml or
+# docker-compose.prod.yml. Values come from a sibling `.env` file.
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - backend
+
+  sentences:
+    build:
+      context: .
+      dockerfile: services/sentences/Dockerfile
+    environment:
+      SENTENCES_PORT: ${SENTENCES_PORT}
+      SENTENCES_MONGO_URI: ${SENTENCES_MONGO_URI}
+    depends_on:
+      - mongo
+    networks:
+      - backend
+
+  audio:
+    build:
+      context: .
+      dockerfile: services/audio/Dockerfile
+    environment:
+      AUDIO_PORT: ${AUDIO_PORT}
+      AUDIO_MONGO_URI: ${AUDIO_MONGO_URI}
+      MAX_AUDIO_BYTES: ${MAX_AUDIO_BYTES}
+    depends_on:
+      - mongo
+    networks:
+      - backend
+
+  gateway:
+    build:
+      context: .
+      dockerfile: services/gateway/Dockerfile
+    environment:
+      GATEWAY_PORT: ${GATEWAY_PORT}
+      SENTENCES_URL: ${SENTENCES_URL}
+      AUDIO_URL: ${AUDIO_URL}
+    depends_on:
+      - sentences
+      - audio
+    networks:
+      - backend
+
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+    depends_on:
+      - gateway
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  mongo_data:

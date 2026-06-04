@@ -1,0 +1,55 @@
+# Dev overrides: hot reload via bind mounts + per-service dev scripts, and
+# individual ports exposed to the host for debugging.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+
+services:
+  mongo:
+    ports:
+      - "${MONGO_DEBUG_PORT}:27017"
+
+  sentences:
+    image: node:20-alpine
+    build: !reset null
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -w @sentence-practice/sentences"
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    ports:
+      - "${SENTENCES_DEBUG_PORT}:4001"
+
+  audio:
+    image: node:20-alpine
+    build: !reset null
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -w @sentence-practice/audio"
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    ports:
+      - "${AUDIO_DEBUG_PORT}:4002"
+
+  gateway:
+    image: node:20-alpine
+    build: !reset null
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -w @sentence-practice/gateway"
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    ports:
+      - "${GATEWAY_DEBUG_PORT}:8080"
+
+  web:
+    image: node:20-alpine
+    build: !reset null
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -w @sentence-practice/web"
+    environment:
+      GATEWAY_URL: ${GATEWAY_URL}
+      VITE_DEV_PORT: ${VITE_DEV_PORT}
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    ports:
+      - "${VITE_DEV_PORT}:${VITE_DEV_PORT}"

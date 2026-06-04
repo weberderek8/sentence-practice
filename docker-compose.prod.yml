@@ -1,0 +1,21 @@
+# Prod overrides for the home server: build images from source, keep services
+# up across reboots, and expose ONLY the web entry port on the host.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+
+services:
+  mongo:
+    restart: unless-stopped
+
+  sentences:
+    restart: unless-stopped
+
+  audio:
+    restart: unless-stopped
+
+  gateway:
+    restart: unless-stopped
+
+  web:
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT}:80"
