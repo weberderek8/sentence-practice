@@ -153,6 +153,47 @@ audio {
   margin: 1rem 0;
 }
 
+.practice-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  margin: 1rem 0;
+}
+
+.practice-filters label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.practice-filters select {
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  background: #0f172a;
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.practice-filters input[type="checkbox"] {
+  display: inline-block;
+  width: auto;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--accent);
+}
+
+.practice-filters input[type="range"] {
+  display: inline-block;
+  width: 8rem;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--accent);
+}
+
 .now-playing .english {
   font-size: 1.3rem;
 }
