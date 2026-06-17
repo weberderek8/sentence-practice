@@ -1,0 +1,84 @@
+# Self-contained compose file for deploying via Portainer as a Git stack.
+#
+# Portainer deploys ONE compose file (it can't merge -f base -f prod like the
+# CLI), so this file folds docker-compose.yml + docker-compose.prod.yml into a
+# single definition. Because Portainer clones the repo onto the Docker host, the
+# `build:` contexts below resolve against the repo root just like the CLI.
+#
+# Set the env vars in the Portainer stack UI (see PORTAINER.md). Only
+# MONGO_INITDB_ROOT_PASSWORD is required; everything else has a safe default.
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-root}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:?Set MONGO_INITDB_ROOT_PASSWORD in the Portainer stack environment variables}
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - backend
+
+  sentences:
+    build:
+      context: .
+      dockerfile: services/sentences/Dockerfile
+    restart: unless-stopped
+    environment:
+      SENTENCES_PORT: "4001"
+      # URI derived from the Mongo creds above so you set the password once.
+      SENTENCES_MONGO_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:-root}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/${SENTENCES_DB_NAME:-sentences_db}?authSource=admin
+    depends_on:
+      - mongo
+    networks:
+      - backend
+
+  audio:
+    build:
+      context: .
+      dockerfile: services/audio/Dockerfile
+    restart: unless-stopped
+    environment:
+      AUDIO_PORT: "4002"
+      AUDIO_MONGO_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:-root}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/${AUDIO_DB_NAME:-audio_db}?authSource=admin
+      MAX_AUDIO_BYTES: ${MAX_AUDIO_BYTES:-26214400}
+    depends_on:
+      - mongo
+    networks:
+      - backend
+
+  gateway:
+    build:
+      context: .
+      dockerfile: services/gateway/Dockerfile
+    restart: unless-stopped
+    environment:
+      GATEWAY_PORT: "8080"
+      SENTENCES_URL: http://sentences:4001
+      AUDIO_URL: http://audio:4002
+    depends_on:
+      - sentences
+      - audio
+    networks:
+      - backend
+
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+    restart: unless-stopped
+    # The ONLY port published on the host. Reach the app at http://<box-ip>:${WEB_PORT}.
+    ports:
+      - "${WEB_PORT:-8000}:80"
+    depends_on:
+      - gateway
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  mongo_data:
