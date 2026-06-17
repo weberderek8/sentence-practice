@@ -25,7 +25,7 @@ export function createApp() {
         return res.status(400).json({ error: err.message });
       }
       console.error("[audio] unhandled error:", err);
-      res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ error: "Internal server error" });
     },
   );
 

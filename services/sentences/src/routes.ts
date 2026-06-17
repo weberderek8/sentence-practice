@@ -19,7 +19,7 @@ sentencesRouter.get("/:id", async (req: Request, res: Response) => {
   }
   const doc = await SentenceModel.findById(req.params.id).exec();
   if (!doc) return res.status(404).json({ error: "Not found" });
-  res.json(toSentence(doc));
+  return res.json(toSentence(doc));
 });
 
 sentencesRouter.post("/", async (req: Request, res: Response) => {
@@ -31,7 +31,7 @@ sentencesRouter.post("/", async (req: Request, res: Response) => {
     english: body.english,
     translation: body.translation ?? "",
   });
-  res.status(201).json(toSentence(doc));
+  return res.status(201).json(toSentence(doc));
 });
 
 sentencesRouter.patch("/:id", async (req: Request, res: Response) => {
@@ -49,7 +49,7 @@ sentencesRouter.patch("/:id", async (req: Request, res: Response) => {
     runValidators: true,
   }).exec();
   if (!doc) return res.status(404).json({ error: "Not found" });
-  res.json(toSentence(doc));
+  return res.json(toSentence(doc));
 });
 
 sentencesRouter.delete("/:id", async (req: Request, res: Response) => {
@@ -58,5 +58,5 @@ sentencesRouter.delete("/:id", async (req: Request, res: Response) => {
   }
   const doc = await SentenceModel.findByIdAndDelete(req.params.id).exec();
   if (!doc) return res.status(404).json({ error: "Not found" });
-  res.status(204).end();
+  return res.status(204).end();
 });

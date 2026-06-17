@@ -63,7 +63,7 @@ audioRouter.post(
       res.status(201).json(body);
     });
 
-    uploadStream.end(req.file.buffer);
+    return uploadStream.end(req.file.buffer);
   },
 );
 
@@ -114,12 +114,12 @@ audioRouter.get("/:id", async (req: Request, res: Response) => {
     if (!res.headersSent) res.status(500).end();
     else res.end();
   });
-  stream.pipe(res);
+  return stream.pipe(res);
 });
 
 audioRouter.delete("/:id", async (req: Request, res: Response) => {
   const file = await findFile(req.params.id);
   if (!file) return res.status(404).json({ error: "Not found" });
   await getBucket().delete(file._id);
-  res.status(204).end();
+  return res.status(204).end();
 });
